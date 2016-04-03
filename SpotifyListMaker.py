@@ -2,6 +2,10 @@ import urllib
 import urllib2
 import json
 import os 
+import re
+
+
+OAuthToken = "BQAmjU6F6oQJJmVRCsThbuEz-bo1VZe4lfJ9Au-rRSXGKnpW8onFgF5_8dm4kFBcR4hp6Rh79IJQMioQbgiDZsR_ZNEQhZ2Y7FpaC7axudXWmIPYgDi9Hqd23O_lyldPg_WANeDjelEN4uKreJk0R_TiHD1M5nvjTZhVmVMnUFTXdcS_57AV5V-ViaFwIOAoj_qtPbrb332a"
 
 
 def getSongURI(title): 	
@@ -11,23 +15,29 @@ def getSongURI(title):
 	uriReq = urllib2.Request(url)
 
 	uriReq.add_header('Accept', "application/json")
-	res = urllib2.urlopen(uriReq)
-
-	plainJSON = res.read()
-	parsedJSON = json.loads(plainJSON)
-	res.close()
-
+	
 	try:
+		res = urllib2.urlopen(uriReq)
+
+		plainJSON = res.read()
+		parsedJSON = json.loads(plainJSON)
+		res.close()
+		
+		print parsedJSON["tracks"]
 		currentSong = parsedJSON["tracks"]["items"][0]["uri"]
+		
+		
 		return currentSong
 		
 	except IndexError:
 		print "song not found"
 		return
-
+	except:
+		print "song not found"
+		return
 def fillExistingPlaylist(songs, playlistID, username):
 
-	OAuthToken = "BQBnKDn_4KTbrjFaG9EKX0WB3EwTDadzOCZp7YaNQZL-K6Eme19oQI99PnIQD98cvErQ2VtcUSGnzxStnNlDMpTRRf-uCSBAN_pb9eHjfwvZbCEMGILlblRMyVpSAfFnKXiwmTTnncREHAKsIE3q8E3iGCWVmyL-cxDsb-96dWgAq2VB17_r5gya"
+	global OAuthToken
 	
 	for song in songs:
 		if song:
@@ -57,6 +67,7 @@ def fillExistingPlaylist(songs, playlistID, username):
 			           '-H "Authorization: Bearer ' + OAuthToken + '"'
 			print post_cmd
 			os.system(post_cmd)
+				
 
 def main():
 	songs = list()
@@ -64,10 +75,17 @@ def main():
 	filename = raw_input("File name of the songs: ")
 	listfile = open(filename)
 	for i in listfile.readlines():
-		print i.rstrip()
-		songuri = getSongURI(i.rstrip())
+		i = i.rstrip()
+		strippable = re.sub(" {2,}", "|", i)
+		stripped = strippable.split("|")
+		song = stripped[1] + " " + stripped[0]
+		
+		print song.rstrip()
+		
+		songuri = getSongURI(song.rstrip())
+		
 		songs.append(songuri)
-	
+
 	
 	username = raw_input("Feed me the username: ")
 	playlistID = raw_input("Feed me the id of the wished playlist (will be automated later): ")
